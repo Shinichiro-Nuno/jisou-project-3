@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "./lib/supabase-client";
+import { Heading } from "@chakra-ui/react";
+import { fetchRecords } from "./lib/supabase";
 
 function LearningRecord() {
   type Record = {
-    id: number;
+    id: string;
     title: string;
     time: number;
   };
@@ -45,7 +47,7 @@ function LearningRecord() {
   );
 
   const onClickDelete = useCallback(
-    async (recordId: number, index: number) => {
+    async (recordId: string, index: number) => {
       if (recordId) {
         const { error } = await supabase
           .from("study-record")
@@ -66,28 +68,20 @@ function LearningRecord() {
   );
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      const { data, error } = await supabase
-        .from("study-record")
-        .select("id, title, time");
-
-      if (error) {
-        console.error("データ取得エラー:", error.message);
-      } else if (data && data.length > 0) {
-        setRecords(data);
-      }
-
+    const fetchAndSetRecords = async () => {
+      const records = await fetchRecords();
+      setRecords(records);
       setIsLoading(false);
     };
 
-    fetchRecords();
+    fetchAndSetRecords();
   }, []);
 
   const totalTime = records.reduce((sum, record) => sum + record.time, 0);
 
   return (
     <>
-      <h1>学習記録一覧</h1>
+      <Heading>学習記録一覧</Heading>
       <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
         <p>学習内容</p>
         <input
