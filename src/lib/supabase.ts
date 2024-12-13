@@ -17,3 +17,32 @@ export async function fetchRecords(): Promise<Record[]> {
 
   return [];
 }
+
+export async function insertRecord(
+  title: string,
+  time: number
+): Promise<Record | null> {
+  try {
+    const { data, error } = await supabase
+      .from("study-record")
+      .insert({ title, time })
+      .select();
+
+    if (error) {
+      console.error("データ登録エラー:", error.message);
+      return null;
+    }
+
+    if (data) {
+      return new Record(data[0].id, data[0].title, data[0].time);
+    }
+
+    return null;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("データ登録エラー:", error.message);
+    }
+
+    return null;
+  }
+}

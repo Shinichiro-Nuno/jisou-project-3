@@ -1,7 +1,16 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "./lib/supabase-client";
-import { Heading } from "@chakra-ui/react";
-import { fetchRecords } from "./lib/supabase";
+import {
+  Box,
+  Button,
+  Heading,
+  Input,
+  Spinner,
+  Stack,
+  Text,
+  VStack,
+} from "@chakra-ui/react";
+import { fetchRecords, insertRecord } from "./lib/supabase";
 
 function LearningRecord() {
   type Record = {
@@ -19,31 +28,22 @@ function LearningRecord() {
   const onClickSave = useCallback(
     async (title: string, time: number) => {
       if (title && time) {
-        const { data, error } = await supabase
-          .from("study-record")
-          .insert({ title, time })
-          .select();
+        const newRecord = await insertRecord(title, time);
 
-        if (error) {
-          console.error("データ登録エラー:", error.message);
-          return;
-        }
-
-        if (data && data.length > 0) {
-          console.log(data);
-          const insertedRecord = data[0];
-
-          const newRecords = [...records, insertedRecord];
-          setRecords(newRecords);
+        if (newRecord) {
+          setIsInput(true);
+          setRecords((prev) => [...prev, newRecord]);
+          console.log("登録完了");
           setTitle("");
           setTime(0);
-          setIsInput(true);
+        } else {
+          console.error("データ登録に失敗しました");
         }
       } else {
         setIsInput(false);
       }
     },
-    [records]
+    [setRecords]
   );
 
   const onClickDelete = useCallback(
@@ -81,45 +81,85 @@ function LearningRecord() {
 
   return (
     <>
-      <Heading>学習記録一覧</Heading>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <p>学習内容</p>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-        ></input>
-      </div>
-      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-        <p>学習時間</p>
-        <input
-          type="number"
-          value={time}
-          onChange={(e) => setTime(Number(e.target.value))}
-        ></input>
-      </div>
-      <p>{`入力されている学習内容：${title}`}</p>
-      <p>{`入力されている時間：${time}`}</p>
-      <button onClick={() => onClickSave(title, time)}>登録</button>
-      {!isInput && <p>入力されていない項目があります</p>}
-      <ul>
-        {isLoading ? (
-          <p>Loading...</p>
-        ) : (
-          records.map((record, index) => (
-            <li key={index}>
-              {`${record.title} ${record.time}時間`}
-              <button
-                onClick={() => onClickDelete(record.id, index)}
-                style={{ marginLeft: "8px", marginBottom: "8px" }}
-              >
-                削除
-              </button>
-            </li>
-          ))
-        )}
-      </ul>
-      <p>{`合計時間：${totalTime} / 1000 (h)`}</p>
+      <Box
+        p={4}
+        minW={{ base: "90%", md: "600px" }}
+        fontSize={{ base: "sm", md: "md" }}
+        borderWidth="2px"
+        borderColor="cyan"
+        borderRadius="md"
+      >
+        <Stack>
+          <Heading fontSize="3xl">学習記録一覧</Heading>
+          <Box style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Text whiteSpace="nowrap">学習内容</Text>
+            <Input
+              type="text"
+              value={title}
+              borderColor="cyan"
+              borderWidth="2px"
+              onChange={(e) => setTitle(e.target.value)}
+            ></Input>
+          </Box>
+          <Box style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+            <Text whiteSpace="nowrap">学習時間</Text>
+            <Input
+              type="number"
+              value={time}
+              borderColor="cyan"
+              borderWidth="2px"
+              onChange={(e) => setTime(Number(e.target.value))}
+            ></Input>
+          </Box>
+          <Text>{`入力されている学習内容：${title}`}</Text>
+          <Text>{`入力されている時間：${time}`}</Text>
+          <Box>
+            <Button
+              colorPalette="cyan"
+              width="sl"
+              height={8}
+              onClick={() => onClickSave(title, time)}
+            >
+              登録
+            </Button>
+          </Box>
+          {!isInput && <p>入力されていない項目があります</p>}
+          <Box as="ul" listStylePosition="inside">
+            {isLoading ? (
+              <VStack colorPalette="teal">
+                <Spinner color="colorPalette.600" />
+              </VStack>
+            ) : (
+              records.map((record, index) => (
+                <Box
+                  display="flex"
+                  key={index}
+                  as="li"
+                  borderColor="cyan"
+                  borderWidth="2px"
+                  borderRadius="md"
+                  marginBottom="1"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  p={3}
+                >
+                  <Text>{record.title}</Text>
+                  <Text>{`${record.time}時間`}</Text>
+                  <Button
+                    height={8}
+                    onClick={() => onClickDelete(record.id, index)}
+                    colorPalette="cyan"
+                    style={{ marginLeft: "8px" }}
+                  >
+                    削除
+                  </Button>
+                </Box>
+              ))
+            )}
+          </Box>
+          <p>{`合計時間：${totalTime} / 1000 (h)`}</p>
+        </Stack>
+      </Box>
     </>
   );
 }
