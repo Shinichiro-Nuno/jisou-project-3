@@ -4,13 +4,13 @@ import {
   Box,
   Button,
   Heading,
-  Input,
   Spinner,
   Stack,
   Text,
   VStack,
 } from "@chakra-ui/react";
 import { fetchRecords, insertRecord } from "./lib/supabase";
+import { SaveRecordDialog } from "./components/SaveRecordModal";
 
 function LearningRecord() {
   type Record = {
@@ -19,8 +19,6 @@ function LearningRecord() {
     time: number;
   };
 
-  const [title, setTitle] = useState("");
-  const [time, setTime] = useState(0);
   const [records, setRecords] = useState<Record[]>([]);
   const [isInput, setIsInput] = useState(true);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,8 +32,6 @@ function LearningRecord() {
           setIsInput(true);
           setRecords((prev) => [...prev, newRecord]);
           console.log("登録完了");
-          setTitle("");
-          setTime(0);
         } else {
           console.error("データ登録に失敗しました");
         }
@@ -91,37 +87,12 @@ function LearningRecord() {
       >
         <Stack>
           <Heading fontSize="3xl">学習記録一覧</Heading>
-          <Box style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Text whiteSpace="nowrap">学習内容</Text>
-            <Input
-              type="text"
-              value={title}
-              borderColor="cyan"
-              borderWidth="2px"
-              onChange={(e) => setTitle(e.target.value)}
-            ></Input>
-          </Box>
-          <Box style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-            <Text whiteSpace="nowrap">学習時間</Text>
-            <Input
-              type="number"
-              value={time}
-              borderColor="cyan"
-              borderWidth="2px"
-              onChange={(e) => setTime(Number(e.target.value))}
-            ></Input>
-          </Box>
-          <Text>{`入力されている学習内容：${title}`}</Text>
-          <Text>{`入力されている時間：${time}`}</Text>
           <Box>
-            <Button
-              colorPalette="cyan"
-              width="sl"
-              height={8}
-              onClick={() => onClickSave(title, time)}
-            >
-              登録
-            </Button>
+            <SaveRecordDialog
+              onSave={(title, time) => {
+                onClickSave(title, time);
+              }}
+            />
           </Box>
           {!isInput && <p>入力されていない項目があります</p>}
           <Box as="ul" listStylePosition="inside">
