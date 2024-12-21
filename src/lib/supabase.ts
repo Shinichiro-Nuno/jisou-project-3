@@ -1,7 +1,7 @@
 import { supabase } from "./supabase-client";
 import { Record } from "../domain/record";
 
-export async function fetchRecords(): Promise<Record[]> {
+export async function FetchRecords(): Promise<Record[]> {
   const { data, error } = await supabase.from("study-record").select();
 
   if (error) {
@@ -18,7 +18,7 @@ export async function fetchRecords(): Promise<Record[]> {
   return [];
 }
 
-export async function insertRecord(
+export async function InsertRecord(
   title: string,
   time: number
 ): Promise<Record | null> {
@@ -44,5 +44,23 @@ export async function insertRecord(
     }
 
     return null;
+  }
+}
+
+export async function DeleteRecord(id: string): Promise<boolean> {
+  try {
+    const { error } = await supabase.from("study-record").delete().eq("id", id);
+
+    if (error) {
+      console.error("データ削除エラー:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("データ削除エラー:", error.message);
+    }
+    return false;
   }
 }

@@ -9,7 +9,7 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { fetchRecords, insertRecord } from "./lib/supabase";
+import { DeleteRecord, FetchRecords, InsertRecord } from "./lib/supabase";
 import { SaveRecordDialog } from "./components/SaveRecordModal";
 
 function LearningRecord() {
@@ -26,7 +26,7 @@ function LearningRecord() {
   const onClickSave = useCallback(
     async (title: string, time: number) => {
       if (title && time) {
-        const newRecord = await insertRecord(title, time);
+        const newRecord = await InsertRecord(title, time);
 
         if (newRecord) {
           setIsInput(true);
@@ -45,19 +45,15 @@ function LearningRecord() {
   const onClickDelete = useCallback(
     async (recordId: string, index: number) => {
       if (recordId) {
-        const { error } = await supabase
-          .from("study-record")
-          .delete()
-          .eq("id", recordId);
+        const success = await DeleteRecord(recordId);
 
-        if (error) {
-          console.error("データ削除エラー:", error.message);
-          return;
+        if (success) {
+          const newRecords = [...records];
+          newRecords.splice(index, 1);
+          setRecords(newRecords);
+        } else {
+          console.log("データ削除に失敗しました");
         }
-
-        const newRecords = [...records];
-        newRecords.splice(index, 1);
-        setRecords(newRecords);
       }
     },
     [records]
@@ -65,7 +61,7 @@ function LearningRecord() {
 
   useEffect(() => {
     const fetchAndSetRecords = async () => {
-      const records = await fetchRecords();
+      const records = await FetchRecords();
       setRecords(records);
       setIsLoading(false);
     };
@@ -98,7 +94,7 @@ function LearningRecord() {
           <Box as="ul" listStylePosition="inside">
             {isLoading ? (
               <VStack colorPalette="teal">
-                <Spinner color="colorPalette.600" />
+                <Spinner role="progressbar" color="colorPalette.600" />
               </VStack>
             ) : (
               records.map((record, index) => (

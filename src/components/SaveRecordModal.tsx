@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { Box, Input, Stack, Text } from "@chakra-ui/react";
 import { Button } from "../components/ui/button";
@@ -23,19 +24,22 @@ type FormData = {
 };
 
 export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
+  const closeRef = useRef<HTMLButtonElement>(null);
+
   const {
     register,
     handleSubmit,
     reset,
-    formState: { errors, isValid },
+    formState: { errors, isSubmitting },
   } = useForm<FormData>({
-    mode: "onChange",
+    mode: "onSubmit",
   });
 
   const onSubmit = async (data: FormData) => {
     try {
       await onSave(data.title, data.time);
       reset();
+      closeRef.current?.click();
     } catch (error) {
       console.error("データ登録エラー:", error);
     }
@@ -45,19 +49,20 @@ export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
     <DialogRoot>
       <DialogTrigger>
         <Button colorPalette="cyan" width="sl" height={8}>
-          登録
+          新規登録
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>登録フォーム</DialogTitle>
+          <DialogTitle>新規登録</DialogTitle>
         </DialogHeader>
         <DialogBody>
           <form onSubmit={handleSubmit(onSubmit)}>
             <Stack>
               <Box>
-                <label>学習内容</label>
+                <label htmlFor="learning-content">学習内容</label>
                 <Input
+                  id="learning-content"
                   type="text"
                   {...register("title", { required: "内容の入力は必須です" })}
                 />
@@ -66,9 +71,11 @@ export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
                 )}
               </Box>
               <Box>
-                <label>学習時間</label>
+                <label htmlFor="learning-time">学習時間</label>
                 <Input
+                  id="learning-time"
                   type="number"
+                  min="1"
                   {...register("time", {
                     required: "時間の入力は必須です",
                     min: {
@@ -87,13 +94,17 @@ export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
         </DialogBody>
         <DialogFooter>
           <DialogActionTrigger asChild>
-            <Button variant="outline">Cancel</Button>
-          </DialogActionTrigger>
-          <DialogActionTrigger asChild disabled={!isValid}>
-            <Button type="submit" onClick={handleSubmit(onSubmit)}>
-              登録
+            <Button variant="outline" ref={closeRef}>
+              Cancel
             </Button>
           </DialogActionTrigger>
+          <Button
+            type="submit"
+            disabled={isSubmitting}
+            onClick={handleSubmit(onSubmit)}
+          >
+            登録
+          </Button>
         </DialogFooter>
         <DialogCloseTrigger />
       </DialogContent>
