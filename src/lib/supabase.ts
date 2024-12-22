@@ -2,7 +2,10 @@ import { supabase } from "./supabase-client";
 import { Record } from "../domain/record";
 
 export async function FetchRecords(): Promise<Record[]> {
-  const { data, error } = await supabase.from("study-record").select();
+  const { data, error } = await supabase
+    .from("study-record")
+    .select()
+    .order("created_at");
 
   if (error) {
     console.error("データ取得エラー:", error.message);
@@ -43,6 +46,36 @@ export async function InsertRecord(
       console.error("データ登録エラー:", error.message);
     }
 
+    return null;
+  }
+}
+
+export async function UpdateRecord(
+  id: string,
+  title: string,
+  time: number
+): Promise<Record | null> {
+  try {
+    const { data, error } = await supabase
+      .from("study-record")
+      .update({ title, time })
+      .eq("id", id)
+      .select();
+
+    if (error) {
+      console.error("データ更新エラー:", error.message);
+      return null;
+    }
+
+    if (data && data[0]) {
+      return new Record(data[0].id, data[0].title, data[0].time);
+    }
+
+    return null;
+  } catch (error) {
+    if (error instanceof Error) {
+      console.error("データ更新エラー:", error.message);
+    }
     return null;
   }
 }

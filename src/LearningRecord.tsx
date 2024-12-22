@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { supabase } from "./lib/supabase-client";
 import {
   Box,
   Button,
@@ -9,7 +8,12 @@ import {
   Text,
   VStack,
 } from "@chakra-ui/react";
-import { DeleteRecord, FetchRecords, InsertRecord } from "./lib/supabase";
+import {
+  DeleteRecord,
+  FetchRecords,
+  InsertRecord,
+  UpdateRecord,
+} from "./lib/supabase";
 import { SaveRecordDialog } from "./components/SaveRecordModal";
 
 function LearningRecord() {
@@ -37,6 +41,26 @@ function LearningRecord() {
         }
       } else {
         setIsInput(false);
+      }
+    },
+    [setRecords]
+  );
+
+  const onClickUpdate = useCallback(
+    async (recordId: string, title: string, time: number) => {
+      if (recordId && title && time) {
+        const updatedRecord = await UpdateRecord(recordId, title, time);
+
+        if (updatedRecord) {
+          setRecords((prev) =>
+            prev.map((record) =>
+              record.id === recordId ? updatedRecord : record
+            )
+          );
+          console.log("更新完了");
+        } else {
+          console.error("データ更新に失敗しました");
+        }
       }
     },
     [setRecords]
@@ -85,6 +109,7 @@ function LearningRecord() {
           <Heading fontSize="3xl">学習記録一覧</Heading>
           <Box>
             <SaveRecordDialog
+              // 登録ボタン
               onSave={(title, time) => {
                 onClickSave(title, time);
               }}
@@ -110,16 +135,26 @@ function LearningRecord() {
                   justifyContent="space-between"
                   p={3}
                 >
-                  <Text>{record.title}</Text>
+                  <Text marginRight={4}>{record.title}</Text>
                   <Text>{`${record.time}時間`}</Text>
-                  <Button
-                    height={8}
-                    onClick={() => onClickDelete(record.id, index)}
-                    colorPalette="cyan"
-                    style={{ marginLeft: "8px" }}
-                  >
-                    削除
-                  </Button>
+                  <Box>
+                    <Button
+                      height={8}
+                      size={{ base: "sm", md: "md" }}
+                      onClick={() => onClickDelete(record.id, index)}
+                      colorPalette="cyan"
+                      style={{ marginLeft: "8px", marginRight: "8px" }}
+                    >
+                      削除
+                    </Button>
+                    <SaveRecordDialog
+                      // 編集ボタン
+                      editingRecord={record}
+                      onUpdate={(recordId, title, time) => {
+                        onClickUpdate(recordId, title, time);
+                      }}
+                    ></SaveRecordDialog>
+                  </Box>
                 </Box>
               ))
             )}
