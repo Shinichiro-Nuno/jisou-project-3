@@ -138,6 +138,13 @@ function LearningRecord() {
                   <Text marginRight={4}>{record.title}</Text>
                   <Text>{`${record.time}時間`}</Text>
                   <Box>
+                    <SaveRecordDialog
+                      // 編集ボタン
+                      editingRecord={record}
+                      onUpdate={(recordId, title, time) => {
+                        onClickUpdate(recordId, title, time);
+                      }}
+                    ></SaveRecordDialog>
                     <Button
                       height={8}
                       size={{ base: "sm", md: "md" }}
@@ -147,13 +154,6 @@ function LearningRecord() {
                     >
                       削除
                     </Button>
-                    <SaveRecordDialog
-                      // 編集ボタン
-                      editingRecord={record}
-                      onUpdate={(recordId, title, time) => {
-                        onClickUpdate(recordId, title, time);
-                      }}
-                    ></SaveRecordDialog>
                   </Box>
                 </Box>
               ))
