@@ -1,7 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { Box, Input, Stack, Text } from "@chakra-ui/react";
-import { Button } from "../components/ui/button";
+import { Box, Input, Stack, Text, Button } from "@chakra-ui/react";
 import {
   DialogActionTrigger,
   DialogBody,
@@ -84,7 +83,12 @@ export const SaveRecordDialog = ({
   return (
     <DialogRoot>
       <DialogTrigger>
-        <Button colorPalette="cyan" width="sl" height={8}>
+        <Button
+          data-testid="edit-button"
+          colorPalette="cyan"
+          width="sl"
+          height={8}
+        >
           {editingRecord ? "編集" : "新規登録"}
         </Button>
       </DialogTrigger>
