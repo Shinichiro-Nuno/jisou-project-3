@@ -1,7 +1,6 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
-import { Box, Input, Stack, Text } from "@chakra-ui/react";
-import { Button } from "../components/ui/button";
+import { Box, Input, Stack, Text, Button } from "@chakra-ui/react";
 import {
   DialogActionTrigger,
   DialogBody,
@@ -14,8 +13,12 @@ import {
   DialogTrigger,
 } from "../components/ui/dialog";
 
+import { Record } from "../domain/record";
+
 type SaveRecordDialogProps = {
-  onSave: (title: string, time: number) => void;
+  editingRecord?: Record;
+  onSave?: (title: string, time: number) => void;
+  onUpdate?: (id: string, title: string, time: number) => void;
 };
 
 type FormData = {
@@ -23,7 +26,12 @@ type FormData = {
   time: number;
 };
 
-export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
+export const SaveRecordDialog = ({
+  editingRecord,
+  onSave,
+  onUpdate,
+}: SaveRecordDialogProps) => {
+  console.log("editingRecord:", editingRecord);
   const closeRef = useRef<HTMLButtonElement>(null);
 
   const {
@@ -33,28 +41,60 @@ export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     mode: "onSubmit",
+    defaultValues: editingRecord
+      ? {
+          title: editingRecord.title,
+          time: editingRecord.time,
+        }
+      : undefined,
   });
+
+  useEffect(() => {
+    if (editingRecord) {
+      reset({
+        title: editingRecord.title,
+        time: editingRecord.time,
+      });
+    } else {
+      reset({
+        title: "",
+        time: undefined,
+      });
+    }
+  }, [editingRecord, reset]);
 
   const onSubmit = async (data: FormData) => {
     try {
-      await onSave(data.title, data.time);
+      if (editingRecord && onUpdate) {
+        await onUpdate(editingRecord.id, data.title, data.time);
+      } else if (onSave) {
+        await onSave(data.title, data.time);
+      }
       reset();
       closeRef.current?.click();
     } catch (error) {
-      console.error("データ登録エラー:", error);
+      console.error(
+        editingRecord ? "データ登録エラー" : "データ登録エラー",
+        error
+      );
     }
   };
 
   return (
     <DialogRoot>
       <DialogTrigger>
-        <Button colorPalette="cyan" width="sl" height={8}>
-          新規登録
+        <Button
+          data-testid="edit-button"
+          colorPalette="cyan"
+          width="sl"
+          height={8}
+        >
+          {editingRecord ? "編集" : "新規登録"}
         </Button>
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>新規登録</DialogTitle>
+          <DialogTitle>{editingRecord ? "記録編集" : "新規登録"}</DialogTitle>
         </DialogHeader>
         <DialogBody>
           <form onSubmit={handleSubmit(onSubmit)}>
@@ -100,10 +140,11 @@ export const SaveRecordDialog = ({ onSave }: SaveRecordDialogProps) => {
           </DialogActionTrigger>
           <Button
             type="submit"
+            colorPalette="cyan"
             disabled={isSubmitting}
             onClick={handleSubmit(onSubmit)}
           >
-            登録
+            {editingRecord ? "更新" : "登録"}
           </Button>
         </DialogFooter>
         <DialogCloseTrigger />

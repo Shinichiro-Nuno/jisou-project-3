@@ -20,6 +20,12 @@ const mockCreateRecord = jest.fn().mockResolvedValue({
   time: 5,
 });
 
+const mockUpdateRecord = jest.fn().mockResolvedValue({
+  id: "1",
+  title: "更新された学習記録",
+  time: 10,
+});
+
 const mockDeleteRecord = jest.fn().mockResolvedValue({ status: 200 });
 
 jest.mock("../lib/supabase", () => {
@@ -28,6 +34,8 @@ jest.mock("../lib/supabase", () => {
     InsertRecord: (title: string, time: number) =>
       mockCreateRecord(title, time),
     DeleteRecord: (id: string) => mockDeleteRecord(id),
+    UpdateRecord: (id: string, title: string, time: number) =>
+      mockUpdateRecord(id, title, time),
   };
 });
 
@@ -158,6 +166,54 @@ describe("LearningRecord", () => {
         expect(
           screen.getByText("時間は0以上である必要があります")
         ).toBeInTheDocument();
+      });
+    });
+  });
+
+  describe("モーダルでの編集関連のテスト", () => {
+    let user: ReturnType<typeof userEvent.setup>;
+    beforeEach(async () => {
+      user = userEvent.setup();
+
+      await waitFor(() => {
+        expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+      });
+      // 最初の記録の編集ボタンをクリック
+      const firstRecord = screen.getByText("学習記録1").closest("li");
+      const editButton = within(firstRecord!).getByTestId("edit-button");
+      await user.click(editButton);
+
+      expect(screen.getByRole("dialog")).toBeInTheDocument();
+    });
+
+    test("モーダルのタイトルが記録編集であることの確認", async () => {
+      expect(
+        screen.getByRole("heading", { name: "記録編集" })
+      ).toBeInTheDocument();
+    });
+
+    test("編集して更新出来ることの確認", async () => {
+      // 入力フィールドを取得
+      const titleInput = screen.getByLabelText("学習内容");
+      const timeInput = screen.getByLabelText("学習時間");
+
+      // 既存の値をクリアして新しい値を入力
+      await user.clear(titleInput);
+      await user.clear(timeInput);
+      await user.type(titleInput, "更新された学習記録");
+      await user.type(timeInput, "10");
+
+      // 更新ボタンをクリック
+      await user.click(screen.getByText("更新"));
+
+      // モーダルが閉じることを確認
+      await waitFor(() => {
+        expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+      });
+
+      await waitFor(() => {
+        expect(screen.getByText("更新された学習記録")).toBeInTheDocument();
+        expect(screen.getByText("10時間")).toBeInTheDocument();
       });
     });
   });
