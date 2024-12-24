@@ -136,7 +136,7 @@ function LearningRecord() {
                   p={3}
                 >
                   <Text marginRight={4}>{record.title}</Text>
-                  <Text>{`${record.time}時間`}</Text>
+                  <Text marginRight={2}>{`${record.time}時間`}</Text>
                   <Box>
                     <SaveRecordDialog
                       // 編集ボタン
@@ -150,7 +150,7 @@ function LearningRecord() {
                       size={{ base: "sm", md: "md" }}
                       onClick={() => onClickDelete(record.id, index)}
                       colorPalette="cyan"
-                      style={{ marginLeft: "8px", marginRight: "8px" }}
+                      style={{ marginLeft: "8px" }}
                     >
                       削除
                     </Button>
